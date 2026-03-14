@@ -1,106 +1,207 @@
-const mongoose = require("mongoose");
-
-const dotenv = require("dotenv").config();
-
 const fantasyTeamModel = require("../models/f1FantasyTeam");
 const fantasyLeagueModel = require("../models/f1FantasyLeague");
 const raceDataModel = require("../models/f1RaceData");
 const fantasyTeamEntriesModel = require("../models/f1FantasyTeamEntries");
+const {
+  createHttpError,
+  getCurrentRoundNumber,
+} = require("./fantasyTeamValidation");
+
+const parseRoundNumber = (value) => {
+  const roundNumber = Number.parseInt(value, 10);
+  if (!Number.isInteger(roundNumber) || roundNumber <= 0) {
+    throw createHttpError(400, "roundNumber must be a positive integer");
+  }
+  return roundNumber;
+};
+
+const getRaceDataForRound = async (roundNumber) => {
+  const raceData = await raceDataModel.findOne({ roundNumber });
+  if (!raceData) {
+    throw createHttpError(404, `Race data for round ${roundNumber} not found`);
+  }
+  return raceData;
+};
 
 exports.simulateTeamPoints = async (team) => {
-  //right now this is not called
-  //gets called upon team creation, to simulate all grand prix until that point
-  for (let i = 1; i <= parseInt(process.env.CURRENT_ROUND_NUMBER); i++) {
+  // Right now this is not called. If used later, it replays all rounds up to
+  // the team's creation point by reusing the same idempotent calculation path.
+  for (let i = 1; i <= getCurrentRoundNumber(); i++) {
     await exports.calculateRoundPoints(team, i);
   }
 };
-exports.calculateRoundPoints = async (team, roundNumber) => {
-  //updates race history in fantasy teams model
-  try {
-    const raceData = await raceDataModel.findOne({ roundNumber: roundNumber });
-    let pointsScored = 0;
-    for (let driver of team.f1Drivers) {
-      const performance = raceData.f1DriversPerformance.find((p) => {
-        return p.driverId.toString() === driver.driverId.toString();
-      });
-      if (!performance) {
-        const error = new Error("Something wrong with data");
-        throw error;
-      }
-      let driverPoints = performance.points;
-      if (driver.doublePoints) {
-        driverPoints *= 2;
-      }
-      pointsScored += driverPoints;
-    }
 
-    for (let f1team of team.f1Teams) {
-      const performance = raceData.f1TeamPerformance.find((p) => {
-        return p.teamId.toString() === f1team.teamId.toString();
-      });
-      if (!performance) {
-        const error = new Error("Something wrong with data");
-        throw error;
-      }
-      pointsScored += performance.overallPoints;
-    }
+exports.calculateRoundPoints = async (team, roundNumber, existingRaceData) => {
+  const raceData = existingRaceData || (await getRaceDataForRound(roundNumber));
 
-    //check if already exists and configure accordingly. if it does, we don't want to override,
-    //because we want to keep the data of the fantasy team that was set at that time. shouldn't happen though
-
-    const alreadyExists = team.raceHistory.some((r) => {
-      return r.roundNumber === roundNumber;
-    });
-    if (!alreadyExists) {
-      //shouldn't not happen
-      team.raceHistory.push({
-        raceId: raceData._id,
-        roundNumber: raceData.roundNumber,
-        pointsEarned: pointsScored,
-      });
-      team.totalPoints += pointsScored;
-      await team.save();
-    }
-  } catch (err) {
-    throw err;
+  if (roundNumber < team.createdAtGP) {
+    return { applied: false, pointsScored: 0 };
   }
-  //return pointsScored;    optionally return this
+
+  const alreadyExists = team.raceHistory.some((raceRecord) => {
+    return raceRecord.roundNumber === roundNumber;
+  });
+
+  if (alreadyExists) {
+    return { applied: false, pointsScored: 0 };
+  }
+
+  let pointsScored = 0;
+
+  for (const driver of team.f1Drivers) {
+    const performance = raceData.f1DriversPerformance.find((record) => {
+      return record.driverId.toString() === driver.driverId.toString();
+    });
+    if (!performance) {
+      throw createHttpError(
+        500,
+        `Missing race performance for driver ${driver.driverId.toString()}`
+      );
+    }
+
+    let driverPoints = performance.points;
+    if (driver.doublePoints) {
+      driverPoints *= 2;
+    }
+    pointsScored += driverPoints;
+  }
+
+  for (const f1team of team.f1Teams) {
+    const performance = raceData.f1TeamPerformance.find((record) => {
+      return record.teamId.toString() === f1team.teamId.toString();
+    });
+    if (!performance) {
+      throw createHttpError(
+        500,
+        `Missing race performance for constructor ${f1team.teamId.toString()}`
+      );
+    }
+    pointsScored += performance.overallPoints;
+  }
+
+  team.raceHistory.push({
+    raceId: raceData._id,
+    roundNumber: raceData.roundNumber,
+    pointsEarned: pointsScored,
+  });
+  team.totalPoints += pointsScored;
+  await team.save();
+
+  return { applied: true, pointsScored };
+};
+
+const updateAllFantasyTeamsForRoundNumber = async (roundNumber) => {
+  const raceData = await getRaceDataForRound(roundNumber);
+  const allTeams = await fantasyTeamModel.find();
+  let updatedCount = 0;
+  let skippedCount = 0;
+
+  for (const team of allTeams) {
+    const result = await exports.calculateRoundPoints(team, roundNumber, raceData);
+    if (result.applied) {
+      updatedCount += 1;
+    } else {
+      skippedCount += 1;
+    }
+  }
+
+  return {
+    roundNumber,
+    updatedCount,
+    skippedCount,
+  };
+};
+
+const updateAllLeagueEntriesForRoundNumber = async (roundNumber) => {
+  await getRaceDataForRound(roundNumber);
+
+  const affectedLeagues = await fantasyLeagueModel.find({
+    "rules.roundsIncluded.roundNumber": roundNumber,
+  });
+  const leagueIds = affectedLeagues.map((league) => league._id);
+  const entries = await fantasyTeamEntriesModel
+    .find({ leagueId: { $in: leagueIds } })
+    .populate("fantasyTeamId", "createdAtGP raceHistory");
+
+  let updatedCount = 0;
+  let alreadyAppliedCount = 0;
+  let skippedCount = 0;
+
+  for (const entry of entries) {
+    const appliedRounds = entry.appliedRounds || [];
+    if (appliedRounds.some((appliedRound) => Number(appliedRound) === roundNumber)) {
+      alreadyAppliedCount += 1;
+      continue;
+    }
+
+    const roundRecord = entry.fantasyTeamId?.raceHistory.find((record) => {
+      return record.roundNumber === roundNumber;
+    });
+    if (!roundRecord) {
+      skippedCount += 1;
+      continue;
+    }
+
+    entry.totalPoints += roundRecord.pointsEarned;
+    entry.appliedRounds = [...appliedRounds, roundNumber];
+    await entry.save();
+    updatedCount += 1;
+  }
+
+  await exports.updateAllLeagueEntriesRanking(roundNumber);
+
+  return {
+    roundNumber,
+    affectedLeagueCount: leagueIds.length,
+    updatedCount,
+    alreadyAppliedCount,
+    skippedCount,
+  };
+};
+
+exports.processRoundNumber = async (roundNumber) => {
+  const teamSummary = await updateAllFantasyTeamsForRoundNumber(roundNumber);
+  const entrySummary = await updateAllLeagueEntriesForRoundNumber(roundNumber);
+
+  return {
+    roundNumber,
+    fantasyTeams: teamSummary,
+    leagueEntries: entrySummary,
+  };
 };
 
 exports.updateAllFantasyTeamForRound = async (req, res, next) => {
-  const roundNumber = req.body.roundNumber;
-  //updates all fantasy teams for that selected round, according to their current structure
-  const allTeams = await fantasyTeamModel.find();
-  for (let team of allTeams) {
-    await exports.calculateRoundPoints(team, roundNumber);
+  try {
+    const roundNumber = parseRoundNumber(req.body.roundNumber);
+    const summary = await updateAllFantasyTeamsForRoundNumber(roundNumber);
+    res
+      .status(200)
+      .json({ message: "Teams updated succesfully", summary: summary });
+  } catch (err) {
+    next(err);
   }
-  res.status(200).json({ message: "Teams updated succesfully" });
 };
 
 exports.updateAllLeagueEntriesForRound = async (req, res, next) => {
   try {
-    const roundNumber = req.body.roundNumber;
-    const affectedLeagues = await fantasyLeagueModel.find({
-      "rules.roundsIncluded.roundNumber": roundNumber,
+    const roundNumber = parseRoundNumber(req.body.roundNumber);
+    const summary = await updateAllLeagueEntriesForRoundNumber(roundNumber);
+    res.status(200).json({
+      message: "Team entries updated succesfully",
+      summary: summary,
     });
-    const leagueIds = affectedLeagues.map((league) => {
-      return league._id;
-    });
-    const entries = await fantasyTeamEntriesModel
-      .find({ leagueId: { $in: leagueIds } })
-      .populate("fantasyTeamId", "createdAtGP raceHistory");
-    console.log(entries);
-    for (let entry of entries) {
-      //if (roundNumber < entry.fantasyTeamId.createdAtGP) continue;  //shouldn't happen
-      const roundRecord = entry.fantasyTeamId.raceHistory.find(
-        (r) => r.roundNumber === roundNumber
-      );
-      const pointsLastRound = roundRecord.pointsEarned;
-      entry.totalPoints += pointsLastRound;
-      await entry.save();
-    }
-    await exports.updateAllLeagueEntriesRanking(roundNumber);
-    res.status(200).json({ message: "Team entries updated succesfully" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.processRound = async (req, res, next) => {
+  try {
+    const roundNumber = parseRoundNumber(req.body.roundNumber);
+    const summary = await exports.processRoundNumber(roundNumber);
+    res
+      .status(200)
+      .json({ message: "Round processed succesfully", summary: summary });
   } catch (err) {
     next(err);
   }
@@ -112,19 +213,22 @@ exports.updateAllLeagueEntriesRanking = async (roundNumber) => {
       "rules.roundsIncluded.roundNumber": roundNumber,
     })
     .select("_id");
-  for (let leagueId of affectedLeagueIds) {
+
+  for (const leagueId of affectedLeagueIds) {
     const entries = await fantasyTeamEntriesModel
       .find({ leagueId: leagueId._id })
       .sort({ totalPoints: -1 })
       .select("_id");
+
     const ops = entries.map((entry, idx) => ({
       updateOne: {
         filter: { _id: entry._id },
         update: { $set: { rankingInLeague: idx + 1 } },
       },
     }));
+
     if (ops.length) {
-      await fantasyTeamEntriesModel.bulkWrite(ops); // one DB round-trip, more optimized than normal loops. could have also iterated through each entry and saved each time
+      await fantasyTeamEntriesModel.bulkWrite(ops);
     }
   }
 };

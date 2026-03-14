@@ -5,6 +5,8 @@ const pointsCalculationService = require("../services/pointsCalculation.js");
 
 const router = express.Router();
 
+router.post("/process-round", isAuth, isAdmin, pointsCalculationService.processRound);
+
 router.post(
   "/update-all-league-entries",
   isAuth,

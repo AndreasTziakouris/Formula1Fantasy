@@ -1,7 +1,11 @@
 const mongoose = require("mongoose");
-const dotenv = require("dotenv").config();
 const fantasyLeagueModel = require("../models/f1FantasyLeague");
 const fantasyTeamEntriesModel = require("../models/f1FantasyTeamEntries");
+const fantasyTeamModel = require("../models/f1FantasyTeam");
+const {
+  createHttpError,
+  getCurrentRoundNumber,
+} = require("../services/fantasyTeamValidation.js");
 
 exports.getAllLeagues = async (req, res, next) => {
   try {
@@ -40,7 +44,7 @@ exports.getLeague = async (req, res, next) => {
     const userId = req.userId;
     const league = await fantasyLeagueModel.findById(leagueId);
     if (!league) {
-      res.status(404).json({
+      return res.status(404).json({
         message: "league doesnt exist",
       });
     }
@@ -49,8 +53,8 @@ exports.getLeague = async (req, res, next) => {
       leagueId: league._id,
     });
     const enrichedLeague = {
-      ...league,
-      userJoined: userJoined,
+      ...league.toObject(),
+      userJoined: !!userJoined,
     };
     const entries = await fantasyTeamEntriesModel
       .find({ leagueId: leagueId })
@@ -58,7 +62,7 @@ exports.getLeague = async (req, res, next) => {
       .populate("fantasyTeamId", "fantasyTeamName") //replaces teamId with name
       .populate("userId", "name"); //replaces userId with some details
     if (entries.length === 0) {
-      res.status(200).json({
+      return res.status(200).json({
         message: "no entries yet",
         league: enrichedLeague,
         leaderboard: [],
@@ -116,28 +120,59 @@ exports.joinLeague = async (req, res, next) => {
   try {
     const userId = req.userId;
     const { leagueId, fantasyTeamId } = req.body;
-    //don't need to set total points, it defaults to 0
+
+    if (!mongoose.Types.ObjectId.isValid(leagueId)) {
+      throw createHttpError(400, "League id is invalid");
+    }
+    if (!mongoose.Types.ObjectId.isValid(fantasyTeamId)) {
+      throw createHttpError(400, "Fantasy team id is invalid");
+    }
+
     const league = await fantasyLeagueModel
       .findById(leagueId)
-      .select("entryAmount");
+      .select("entryAmount rules.maxTeams");
+    if (!league) {
+      throw createHttpError(404, "League does not exist");
+    }
+
+    const fantasyTeam = await fantasyTeamModel.findById(fantasyTeamId).select(
+      "_id userId"
+    );
+    if (!fantasyTeam) {
+      throw createHttpError(404, "Fantasy team does not exist");
+    }
+    if (fantasyTeam.userId.toString() !== userId) {
+      throw createHttpError(
+        403,
+        "You can only join a league with one of your own teams"
+      );
+    }
+
     const alreadyJoined = await fantasyTeamEntriesModel.exists({
       userId,
       fantasyTeamId,
       leagueId,
     });
-    //have to check for max teams cap here
     if (alreadyJoined) {
       return res.status(400).json({ message: "Already joined with this team" });
     }
+
+    const currentEntryAmount = await fantasyTeamEntriesModel.countDocuments({
+      leagueId,
+    });
+    if (currentEntryAmount >= league.rules.maxTeams) {
+      throw createHttpError(400, "League is full");
+    }
+
     await fantasyTeamEntriesModel.create({
       userId: userId,
       fantasyTeamId: fantasyTeamId,
       leagueId: leagueId,
-      rankingInLeague: league.entryAmount + 1,
-      createdAtGP: process.env.CURRENT_ROUND_NUMBER,
+      rankingInLeague: currentEntryAmount + 1,
+      createdAtGP: getCurrentRoundNumber(),
     });
     await fantasyLeagueModel.findByIdAndUpdate(leagueId, {
-      $inc: { entryAmount: 1 },
+      $set: { entryAmount: currentEntryAmount + 1 },
     });
     res.status(201).json({ message: "Joined league succesfully" });
   } catch (err) {

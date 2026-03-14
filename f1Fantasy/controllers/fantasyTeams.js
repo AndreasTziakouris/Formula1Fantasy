@@ -2,6 +2,12 @@ const mongoose = require("mongoose");
 const fantasyTeamsModel = require("../models/f1FantasyTeam.js");
 const f1DriverModel = require("../models/f1Driver.js");
 const f1TeamModel = require("../models/f1Team.js");
+const {
+  calculateRemainingTransfers,
+  createHttpError,
+  getCurrentRoundNumber,
+  validateAndBuildFantasyTeamSelection,
+} = require("../services/fantasyTeamValidation.js");
 
 const populateFantasyTeams = async (userId, teamId) => {
   const filter = teamId ? { userId: userId, _id: teamId } : { userId: userId };
@@ -55,47 +61,61 @@ exports.getFantasyTeam = async (req, res, next) => {
 exports.updateFantasyTeam = async (req, res, next) => {
   try {
     const userId = req.userId;
-    const fantasyTeamId = req.body.fantasyTeamId; //can be undefined
-    let isNew = false;
-    if (!fantasyTeamId) {
-      isNew = true;
-    }
-    const filter = fantasyTeamId
-      ? { _id: fantasyTeamId, userId: userId }
-      : { _id: new mongoose.Types.ObjectId(), userId: userId }; //assign new objectId for team id if doesn't exist
+    const fantasyTeamId = req.body.fantasyTeamId;
+    const fantasyTeamName = req.body.fantasyTeamName?.trim();
 
-    const update = {
-      $set: {
-        f1Drivers: req.body.f1Drivers,
-        f1Teams: req.body.f1Teams,
-        remainingBudget: req.body.remainingBudget,
-        remainingTransfers: req.body.remainingTransfers,
-        fantasyTeamName: req.body.fantasyTeamName,
-      },
-      $setOnInsert: {
-        createdAtGP: parseInt(process.env.CURRENT_ROUND_NUMBER),
-        totalPoints: 0,
+    if (!fantasyTeamName) {
+      throw createHttpError(400, "Fantasy team name is required");
+    }
+
+    let existingTeam = null;
+    if (fantasyTeamId) {
+      if (!mongoose.Types.ObjectId.isValid(fantasyTeamId)) {
+        throw createHttpError(400, "Fantasy team id is invalid");
+      }
+      existingTeam = await fantasyTeamsModel.findById(fantasyTeamId);
+      if (!existingTeam) {
+        throw createHttpError(404, "Fantasy team not found");
+      }
+      if (existingTeam.userId.toString() !== userId) {
+        throw createHttpError(403, "You cannot edit another user's team");
+      }
+    }
+
+    const normalizedTeam = await validateAndBuildFantasyTeamSelection({
+      f1Drivers: req.body.f1Drivers,
+      f1Teams: req.body.f1Teams,
+    });
+    const { remainingTransfers } = calculateRemainingTransfers({
+      existingTeam,
+      nextDrivers: normalizedTeam.f1Drivers,
+      nextTeams: normalizedTeam.f1Teams,
+    });
+
+    let savedTeam;
+    if (existingTeam) {
+      existingTeam.fantasyTeamName = fantasyTeamName;
+      existingTeam.f1Drivers = normalizedTeam.f1Drivers;
+      existingTeam.f1Teams = normalizedTeam.f1Teams;
+      existingTeam.remainingBudget = normalizedTeam.remainingBudget;
+      existingTeam.remainingTransfers = remainingTransfers;
+      savedTeam = await existingTeam.save();
+    } else {
+      savedTeam = await fantasyTeamsModel.create({
+        _id: new mongoose.Types.ObjectId(),
+        userId,
+        fantasyTeamName,
+        createdAtGP: getCurrentRoundNumber(),
+        f1Drivers: normalizedTeam.f1Drivers,
+        f1Teams: normalizedTeam.f1Teams,
         raceHistory: [],
-        userId: userId,
-      },
-    };
-
-    const options = {
-      new: true,
-      upsert: true,
-      runValidators: true,
-    };
-
-    const updatedTeam = await fantasyTeamsModel.findOneAndUpdate(
-      filter,
-      update,
-      options
-    );
-    if (isNew) {
-      //simulate for new team
-      //await pointsCalculationService.simulateTeamPoints(updatedTeam);
+        totalPoints: 0,
+        remainingBudget: normalizedTeam.remainingBudget,
+        remainingTransfers,
+      });
     }
-    res.status(201).json(updatedTeam);
+
+    res.status(existingTeam ? 200 : 201).json(savedTeam);
   } catch (err) {
     console.log(err);
     next(err);

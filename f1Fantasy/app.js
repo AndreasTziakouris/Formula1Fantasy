@@ -12,10 +12,15 @@ const adminPointsCalculationRoutes = require("./routes/adminPointsCalculation.js
 const staticDataInsertionRoutes = require("./routes/staticDataInsertion.js");
 
 const app = express();
+const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use("/images", express.static(path.join(__dirname, "public/images")));
+
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
 
 app.use("/auth", authRoutes);
 app.use("/fantasyTeams", fantasyTeamRoutes);
@@ -40,7 +45,9 @@ mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
     console.log("Connected to MongoDB");
-    app.listen(3000);
+    app.listen(port, "0.0.0.0", () => {
+      console.log(`Server listening on port ${port}`);
+    });
   })
   .catch((err) => {
     console.error("Error connecting to MongoDB:", err);

@@ -5,6 +5,12 @@ const staticDataInsertionService = require("../services/staticDataInsertion.js")
 
 const router = express.Router();
 
+router.get("/f1-drivers", isAuth, isAdmin, staticDataInsertionService.getF1Drivers);
+
+router.get("/f1-teams", isAuth, isAdmin, staticDataInsertionService.getF1Teams);
+
+router.get("/f1-races", isAuth, isAdmin, staticDataInsertionService.getF1Races);
+
 router.post(
   "/insert-f1-driver-data",
   isAuth,

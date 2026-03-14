@@ -31,6 +31,10 @@ const f1FantasyTeamEntrySchema = new Schema(
       type: Number,
       required: true,
     },
+    appliedRounds: {
+      type: [Number],
+      default: [],
+    },
   },
   { timestamps: true }
 );
