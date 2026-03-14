@@ -1,6 +1,3 @@
-// src/components/help/faqs-points.jsx
-import React from "react";
-
 const FaqsPoints = () => {
   const qualiPoints = [
     { pos: 1, pts: 10 },
@@ -13,7 +10,7 @@ const FaqsPoints = () => {
     { pos: 8, pts: 3 },
     { pos: 9, pts: 2 },
     { pos: 10, pts: 1 },
-    { pos: "11–20", pts: 0 },
+    { pos: "11-20", pts: 0 },
   ];
 
   const sprintPoints = [
@@ -25,7 +22,7 @@ const FaqsPoints = () => {
     { pos: 6, pts: 3 },
     { pos: 7, pts: 2 },
     { pos: 8, pts: 1 },
-    { pos: "9–20", pts: 0 },
+    { pos: "9-20", pts: 0 },
   ];
 
   const racePoints = [
@@ -39,131 +36,111 @@ const FaqsPoints = () => {
     { pos: 8, pts: 4 },
     { pos: 9, pts: 2 },
     { pos: 10, pts: 1 },
-    { pos: "11–20", pts: 0 },
+    { pos: "11-20", pts: 0 },
   ];
 
   return (
     <div className="mx-auto max-w-6xl p-6">
-      {/* Page header */}
-      <header className="mb-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <h1 className="text-2xl font-bold text-gray-900">
+      <header className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h1 className="text-2xl font-bold text-slate-900">
           FAQs & Points Logic
         </h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="mt-1 text-sm text-slate-600">
           How points are calculated for drivers and constructors, plus answers
-          to common questions.
+          to the most common gameplay questions.
         </p>
       </header>
 
-      {/* 3.1 Qualifying */}
-      <section className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-        <h2 className="mb-3 text-lg font-semibold text-gray-800">
+      <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <h2 className="mb-3 text-lg font-semibold text-slate-800">
           3.1 Qualifying
         </h2>
-        <p className="mb-3 text-sm text-gray-600">
-          Points are based on <strong>qualifying position </strong>.
+        <p className="mb-3 text-sm text-slate-600">
+          Driver qualifying points are awarded directly from qualifying position.
         </p>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b">
-                <th className="py-2 font-semibold text-gray-700">Position</th>
-                <th className="py-2 font-semibold text-gray-700">Driver Pts</th>
+              <tr className="border-b border-slate-200">
+                <th className="py-2 font-semibold text-slate-700">Position</th>
+                <th className="py-2 font-semibold text-slate-700">Driver Pts</th>
               </tr>
             </thead>
             <tbody>
-              {qualiPoints.map((row, i) => (
-                <tr key={i} className="border-b last:border-0">
-                  <td className="py-2 text-gray-800">{row.pos}</td>
-                  <td className="py-2 font-medium text-gray-900">{row.pts}</td>
+              {qualiPoints.map((row) => (
+                <tr key={row.pos} className="border-b border-slate-100 last:border-0">
+                  <td className="py-2 text-slate-800">{row.pos}</td>
+                  <td className="py-2 font-medium text-slate-900">{row.pts}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <p className="mb-2 text-sm font-semibold text-gray-800">
-            Constructor Quali Bonuses (applied once, highest tier only)
+        <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <p className="mb-2 text-sm font-semibold text-slate-800">
+            Constructor qualifying bonuses
           </p>
-          <ul className="text-sm text-gray-700 space-y-1">
-            <li>
-              Neither driver reaches Q2 → <strong>-1</strong>
-            </li>
-            <li>
-              One driver reaches Q2 → <strong>+1</strong>
-            </li>
-            <li>
-              Both drivers reach Q2 → <strong>+3</strong>
-            </li>
-            <li>
-              One driver reaches Q3 → <strong>+5</strong>
-            </li>
-            <li>
-              Both drivers reach Q3 → <strong>+10</strong>
-            </li>
+          <ul className="space-y-1 text-sm text-slate-700">
+            <li>Neither driver reaches Q2 {"->"} -1</li>
+            <li>One driver reaches Q2 {"->"} +1</li>
+            <li>Both drivers reach Q2 {"->"} +3</li>
+            <li>One driver reaches Q3 {"->"} +5</li>
+            <li>Both drivers reach Q3 {"->"} +10</li>
           </ul>
         </div>
       </section>
 
-      {/* 3.2 Sprint */}
-      <section className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-        <h2 className="mb-3 text-lg font-semibold text-gray-800">
-          3.2 Sprint (Rounds 2 &amp; 6 only)
+      <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <h2 className="mb-3 text-lg font-semibold text-slate-800">
+          3.2 Sprint (Rounds 2 & 6 only)
         </h2>
-        <p className="mb-3 text-sm text-gray-600">
-          Positions gained/lost in the sprint <strong>do not affect</strong>{" "}
-          points.
+        <p className="mb-3 text-sm text-slate-600">
+          Sprint positions score points, but sprint gains and losses do not add
+          extra position-change bonuses.
         </p>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b">
-                <th className="py-2 font-semibold text-gray-700">Position</th>
-                <th className="py-2 font-semibold text-gray-700">Driver Pts</th>
+              <tr className="border-b border-slate-200">
+                <th className="py-2 font-semibold text-slate-700">Position</th>
+                <th className="py-2 font-semibold text-slate-700">Driver Pts</th>
               </tr>
             </thead>
             <tbody>
-              {sprintPoints.map((row, i) => (
-                <tr key={i} className="border-b last:border-0">
-                  <td className="py-2 text-gray-800">{row.pos}</td>
-                  <td className="py-2 font-medium text-gray-900">{row.pts}</td>
+              {sprintPoints.map((row) => (
+                <tr key={row.pos} className="border-b border-slate-100 last:border-0">
+                  <td className="py-2 text-slate-800">{row.pos}</td>
+                  <td className="py-2 font-medium text-slate-900">{row.pts}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        <ul className="mt-3 text-sm text-gray-700 space-y-1">
-          <li>
-            Fastest Lap: <strong>+5</strong>
-          </li>
-          <li>
-            Constructor Sprint Points:{" "}
-            <strong>sum of both drivers’ sprint points</strong> (no extra
-            bonuses)
-          </li>
+        <ul className="mt-3 space-y-1 text-sm text-slate-700">
+          <li>Fastest lap: +5</li>
+          <li>Constructor sprint points: sum of both drivers&apos; sprint points</li>
         </ul>
       </section>
 
-      {/* 3.3 Race */}
-      <section className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-        <h2 className="mb-3 text-lg font-semibold text-gray-800">3.3 Race</h2>
+      <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <h2 className="mb-3 text-lg font-semibold text-slate-800">3.3 Race</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b">
-                <th className="py-2 font-semibold text-gray-700">Position</th>
-                <th className="py-2 font-semibold text-gray-700">Driver Pts</th>
+              <tr className="border-b border-slate-200">
+                <th className="py-2 font-semibold text-slate-700">Position</th>
+                <th className="py-2 font-semibold text-slate-700">Driver Pts</th>
               </tr>
             </thead>
             <tbody>
-              {racePoints.map((row, i) => (
-                <tr key={i} className="border-b last:border-0">
-                  <td className="py-2 text-gray-800">{row.pos}</td>
-                  <td className="py-2 font-medium text-gray-900">{row.pts}</td>
+              {racePoints.map((row) => (
+                <tr key={row.pos} className="border-b border-slate-100 last:border-0">
+                  <td className="py-2 text-slate-800">{row.pos}</td>
+                  <td className="py-2 font-medium text-slate-900">{row.pts}</td>
                 </tr>
               ))}
             </tbody>
@@ -171,105 +148,91 @@ const FaqsPoints = () => {
         </div>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-            <p className="mb-1 text-sm font-semibold text-gray-800">
-              Additional Driver Race Bonuses
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <p className="mb-1 text-sm font-semibold text-slate-800">
+              Additional driver race bonuses
             </p>
-            <ul className="text-sm text-gray-700 space-y-1">
-              <li>
-                Positions Gained: <strong>+1</strong> each
-              </li>
-              <li>
-                Positions Lost: <strong>-1</strong> each
-              </li>
-              <li>
-                Fastest Lap: <strong>+10</strong>
-              </li>
+            <ul className="space-y-1 text-sm text-slate-700">
+              <li>Positions gained: +1 each</li>
+              <li>Positions lost: -1 each</li>
+              <li>Fastest lap: +10</li>
             </ul>
           </div>
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-            <p className="mb-1 text-sm font-semibold text-gray-800">
-              Constructor Race Points
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <p className="mb-1 text-sm font-semibold text-slate-800">
+              Constructor race scoring
             </p>
-            <ul className="text-sm text-gray-700 space-y-1">
-              <li>
-                Constructor Race Points ={" "}
-                <strong>sum of both drivers’ race points</strong>
-              </li>
-              <li>
-                Fastest Pit Stop (DHL): <strong>+10</strong>
-              </li>
+            <ul className="space-y-1 text-sm text-slate-700">
+              <li>Constructor race points = sum of both drivers&apos; race points</li>
+              <li>Fastest pit stop: +10</li>
             </ul>
           </div>
         </div>
       </section>
 
-      {/* 3.4 Totals */}
-      <section className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-        <h2 className="mb-3 text-lg font-semibold text-gray-800">
+      <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <h2 className="mb-3 text-lg font-semibold text-slate-800">
           3.4 Total Fantasy Points
         </h2>
         <div className="grid gap-3 md:grid-cols-2">
-          <div className="rounded-lg border border-gray-200 bg-white p-3">
-            <p className="mb-1 text-sm font-semibold text-gray-800">Driver</p>
-            <div className="rounded-md border border-gray-200 bg-gray-50 p-3 font-mono text-xs text-gray-900">
-              driver.points = QualiPts + SprintPts + RacePts
+          <div className="rounded-lg border border-slate-200 bg-white p-3">
+            <p className="mb-1 text-sm font-semibold text-slate-800">Driver</p>
+            <div className="rounded-md border border-slate-200 bg-slate-50 p-3 font-mono text-xs text-slate-900">
+              driver.points = quali + sprint + race
             </div>
           </div>
-          <div className="rounded-lg border border-gray-200 bg-white p-3">
-            <p className="mb-1 text-sm font-semibold text-gray-800">
+          <div className="rounded-lg border border-slate-200 bg-white p-3">
+            <p className="mb-1 text-sm font-semibold text-slate-800">
               Constructor
             </p>
-            <div className="rounded-md border border-gray-200 bg-gray-50 p-3 font-mono text-xs text-gray-900">
-              constructor.overallPoints = Σ(driver.points) + QualiBonus +
-              FastestPitStop
+            <div className="rounded-md border border-slate-200 bg-slate-50 p-3 font-mono text-xs text-slate-900">
+              constructor.overallPoints = sum(driver.points) + quali bonus +
+              fastest pit stop
             </div>
           </div>
         </div>
       </section>
 
-      {/* FAQs */}
-      <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-        <h2 className="mb-3 text-lg font-semibold text-gray-800">FAQs</h2>
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <h2 className="mb-3 text-lg font-semibold text-slate-800">FAQs</h2>
 
-        <details className="group mb-2 rounded-lg border border-gray-200 p-3 open:bg-gray-50">
-          <summary className="cursor-pointer list-none text-sm font-semibold text-gray-900">
+        <details className="group mb-2 rounded-lg border border-slate-200 p-3 open:bg-slate-50">
+          <summary className="cursor-pointer list-none text-sm font-semibold text-slate-900">
             Do sprint positions affect “places gained/lost”?
           </summary>
-          <p className="mt-2 text-sm text-gray-700">
+          <p className="mt-2 text-sm text-slate-700">
             No. Sprint positions do not add or subtract position-change points.
-            Only the main race uses places gained/lost for driver bonuses.
+            Only the main race uses places gained and lost for bonus scoring.
           </p>
         </details>
 
-        <details className="group mb-2 rounded-lg border border-gray-200 p-3 open:bg-gray-50">
-          <summary className="cursor-pointer list-none text-sm font-semibold text-gray-900">
+        <details className="group mb-2 rounded-lg border border-slate-200 p-3 open:bg-slate-50">
+          <summary className="cursor-pointer list-none text-sm font-semibold text-slate-900">
             How does DRS (x2) affect my driver?
           </summary>
-          <p className="mt-2 text-sm text-gray-700">
-            Your chosen DRS driver earns <strong>double</strong> their
-            individual points for that round. Constructors are unaffected by the
-            DRS choice.
+          <p className="mt-2 text-sm text-slate-700">
+            Your chosen DRS driver earns double their individual points for that
+            round. Constructors are unaffected.
           </p>
         </details>
 
-        <details className="group mb-2 rounded-lg border border-gray-200 p-3 open:bg-gray-50">
-          <summary className="cursor-pointer list-none text-sm font-semibold text-gray-900">
+        <details className="group mb-2 rounded-lg border border-slate-200 p-3 open:bg-slate-50">
+          <summary className="cursor-pointer list-none text-sm font-semibold text-slate-900">
             My team was created mid-season. Do I get points for earlier rounds?
           </summary>
-          <p className="mt-2 text-sm text-gray-700">
-            No. You only score from the round your team was created onward
-            (shown as “team not created yet” in race history before that round).
+          <p className="mt-2 text-sm text-slate-700">
+            No. You only score from the round your team was created onward.
+            Earlier rounds are shown as “team not created yet”.
           </p>
         </details>
 
-        <details className="group mb-2 rounded-lg border border-gray-200 p-3 open:bg-gray-50">
-          <summary className="cursor-pointer list-none text-sm font-semibold text-gray-900">
-            Do constructor bonuses stack in qualifying?
+        <details className="group mb-2 rounded-lg border border-slate-200 p-3 open:bg-slate-50">
+          <summary className="cursor-pointer list-none text-sm font-semibold text-slate-900">
+            Do constructor qualifying bonuses stack?
           </summary>
-          <p className="mt-2 text-sm text-gray-700">
-            No. The constructor gets <strong>one</strong> qualifying bonus per
-            round: the highest tier they qualify for (they don’t stack).
+          <p className="mt-2 text-sm text-slate-700">
+            No. The constructor receives one qualifying bonus per round: the
+            highest tier it reached.
           </p>
         </details>
       </section>

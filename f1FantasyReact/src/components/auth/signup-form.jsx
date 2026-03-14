@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
+import { apiRequest } from "../../lib/api";
 
 const Signup = () => {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -11,19 +14,16 @@ const Signup = () => {
 
   const onSubmit = async (formData) => {
     setApiError("");
+
     try {
-      const res = await fetch("http://localhost:3000/auth/signup", {
+      await apiRequest("/auth/signup", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: formData,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Signup failed");
-
-      window.location.href = "/auth/login"; // redirect after signup
+      navigate("/auth/login", { replace: true });
     } catch (err) {
-      setApiError(err.message);
+      setApiError(err.message || "Signup failed");
     }
   };
 
@@ -37,7 +37,6 @@ const Signup = () => {
           Create account
         </h2>
 
-        {/* Name */}
         <input
           {...register("name", {
             required: "Name is required",
@@ -47,13 +46,12 @@ const Signup = () => {
             },
           })}
           placeholder="Name"
-          className="mb-4 w-full rounded-lg border text-gray-900 border-gray-300 p-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+          className="mb-4 w-full rounded-lg border border-gray-300 p-3 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
         />
-        {errors.name && (
+        {errors.name ? (
           <p className="mb-2 text-sm text-red-600">{errors.name.message}</p>
-        )}
+        ) : null}
 
-        {/* Email */}
         <input
           {...register("email", {
             required: "Email is required",
@@ -63,13 +61,12 @@ const Signup = () => {
             },
           })}
           placeholder="Email"
-          className="mb-4 w-full rounded-lg border text-gray-900 border-gray-300 p-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+          className="mb-4 w-full rounded-lg border border-gray-300 p-3 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
         />
-        {errors.email && (
+        {errors.email ? (
           <p className="mb-2 text-sm text-red-600">{errors.email.message}</p>
-        )}
+        ) : null}
 
-        {/* Password */}
         <input
           type="password"
           {...register("password", {
@@ -79,22 +76,25 @@ const Signup = () => {
               message: "Password must be at least 8 characters",
             },
             validate: {
-              hasUpper: (v) =>
-                /[A-Z]/.test(v) || "Must include an uppercase letter",
-              hasLower: (v) =>
-                /[a-z]/.test(v) || "Must include a lowercase letter",
-              hasNumber: (v) => /[0-9]/.test(v) || "Must include a number",
-              hasSpecial: (v) =>
-                /[!@#$%^&*(),.?":{}|<>]/.test(v) ||
+              hasUpper: (value) =>
+                /[A-Z]/.test(value) || "Must include an uppercase letter",
+              hasLower: (value) =>
+                /[a-z]/.test(value) || "Must include a lowercase letter",
+              hasNumber: (value) =>
+                /[0-9]/.test(value) || "Must include a number",
+              hasSpecial: (value) =>
+                /[!@#$%^&*(),.?":{}|<>]/.test(value) ||
                 "Must include a special character",
             },
           })}
           placeholder="Password"
-          className="mb-4 w-full rounded-lg border text-gray-900 border-gray-300 p-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+          className="mb-4 w-full rounded-lg border border-gray-300 p-3 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
         />
-        {errors.password && (
-          <p className="mb-2 text-sm text-red-600">{errors.password.message}</p>
-        )}
+        {errors.password ? (
+          <p className="mb-2 text-sm text-red-600">
+            {errors.password.message}
+          </p>
+        ) : null}
 
         <button
           disabled={isSubmitting}
@@ -103,14 +103,14 @@ const Signup = () => {
           Sign Up
         </button>
 
-        {apiError && <p className="mt-2 text-sm text-red-600">{apiError}</p>}
+        {apiError ? <p className="mt-2 text-sm text-red-600">{apiError}</p> : null}
 
-        <a
-          href="/auth/login"
+        <Link
+          to="/auth/login"
           className="mt-4 block text-center text-sm text-green-600 hover:underline"
         >
           Already have an account? Log in
-        </a>
+        </Link>
       </form>
     </div>
   );

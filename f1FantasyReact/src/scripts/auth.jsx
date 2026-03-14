@@ -1,14 +1,15 @@
-import { Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import NotAuthorized from "../components/auth/not-authorized.jsx";
+import { getAuthToken, getStoredUserRole } from "../lib/api";
 
 export const ProtectedRoute = () => {
-  const isLoggedIn =
-    typeof window !== "undefined" && window.localStorage.getItem("token");
-  return isLoggedIn ? <Outlet /> : <NotAuthorized roleNeeded="user" />;
+  return getAuthToken() ? <Outlet /> : <Navigate to="/auth/login" replace />;
 };
 
 export const AdminRoute = () => {
-  const role =
-    typeof window !== "undefined" && window.localStorage.getItem("userRole");
-  return role === "admin" ? <Outlet /> : <NotAuthorized roleNeeded="admin" />;
+  return getStoredUserRole() === "admin" ? (
+    <Outlet />
+  ) : (
+    <NotAuthorized roleNeeded="admin" />
+  );
 };

@@ -1,7 +1,3 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import "./App.css";
 import Login from "./components/auth/login-form";
 import Signup from "./components/auth/signup-form";
 import Layout from "./components/layout";
@@ -12,13 +8,13 @@ import FantasyTeamBuilder from "./components/fantasy-teams/fantasy-teams-builder
 import FantasyLeaguesList from "./components/fantasy-leagues/fantasy-league-list.jsx";
 import FantasyLeagueView from "./components/fantasy-leagues/fantasy-league-view.jsx";
 import FaqsPoints from "./components/help/faqs-points.jsx";
+import AdminPage from "./components/admin/admin-page.jsx";
 import {
   BrowserRouter,
-  Routes,
-  Route,
-  Link,
-  useParams,
+  Navigate,
   Outlet,
+  Route,
+  Routes,
 } from "react-router-dom";
 
 function App() {
@@ -26,7 +22,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/auth" element={<Outlet />}>
-          <Route index element={<h1>404: Page not found</h1>} />
+          <Route index element={<Navigate to="/auth/login" replace />} />
           <Route path="login" element={<Login />} />
           <Route path="signup" element={<Signup />} />
           <Route path="*" element={<h1>404: Page not found</h1>} />
@@ -34,18 +30,17 @@ function App() {
 
         <Route element={<Layout />}>
           <Route element={<ProtectedRoute />}>
-            <Route index element={<h1>home page</h1>} />{" "}
-            {/*only logged in users*/}
+            <Route index element={<Navigate to="/fantasyTeams" replace />} />
             <Route path="/fantasyTeams" element={<Outlet />}>
               <Route index element={<FantasyTeamsList />} />
               <Route path="view/:teamId" element={<FantasyTeamView />} />
               <Route
                 path="edit/:teamId"
-                element={<FantasyTeamBuilder mode={"edit"} />}
+                element={<FantasyTeamBuilder mode="edit" />}
               />
               <Route
                 path="new-team"
-                element={<FantasyTeamBuilder mode={"build"} />}
+                element={<FantasyTeamBuilder mode="build" />}
               />
             </Route>
             <Route path="/fantasyLeagues" element={<Outlet />}>
@@ -53,6 +48,9 @@ function App() {
               <Route path="view/:leagueId" element={<FantasyLeagueView />} />
             </Route>
             <Route path="/help" element={<FaqsPoints />} />
+            <Route element={<AdminRoute />}>
+              <Route path="/admin" element={<AdminPage />} />
+            </Route>
             <Route path="*" element={<h1>404: Page not found</h1>} />
           </Route>
         </Route>

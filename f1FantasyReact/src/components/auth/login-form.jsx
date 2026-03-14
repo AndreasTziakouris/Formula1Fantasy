@@ -1,31 +1,30 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
+import { apiRequest, setStoredAuth } from "../../lib/api";
 
 const Login = () => {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm();
   const [apiError, setApiError] = useState("");
+
   const onSubmit = async (formData) => {
     setApiError("");
+
     try {
-      const res = await fetch("http://localhost:3000/auth/login", {
+      const data = await apiRequest("/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: formData,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Login failed");
-
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("userId", data.userId);
-      localStorage.setItem("userRole", data.role);
-      window.location.href = "/fantasyTeams";
+      setStoredAuth(data);
+      navigate("/fantasyTeams", { replace: true });
     } catch (err) {
-      setApiError(err.message);
+      setApiError(err.message || "Login failed");
     }
   };
 
@@ -39,7 +38,6 @@ const Login = () => {
           Log in
         </h2>
 
-        {/* Email */}
         <input
           {...register("email", {
             required: "Email is required",
@@ -49,22 +47,23 @@ const Login = () => {
             },
           })}
           placeholder="Email"
-          className="mb-4 w-full rounded-lg border text-gray-900 border-gray-300 p-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="mb-4 w-full rounded-lg border border-gray-300 p-3 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
-        {errors.email && (
+        {errors.email ? (
           <p className="mb-2 text-sm text-red-600">{errors.email.message}</p>
-        )}
+        ) : null}
 
-        {/* Password */}
         <input
           type="password"
           {...register("password", { required: "Password is required" })}
           placeholder="Password"
-          className="mb-4 w-full rounded-lg border text-gray-900 border-gray-300 p-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="mb-4 w-full rounded-lg border border-gray-300 p-3 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
-        {errors.password && (
-          <p className="mb-2 text-sm text-red-600">{errors.password.message}</p>
-        )}
+        {errors.password ? (
+          <p className="mb-2 text-sm text-red-600">
+            {errors.password.message}
+          </p>
+        ) : null}
 
         <button
           disabled={isSubmitting}
@@ -73,14 +72,14 @@ const Login = () => {
           Login
         </button>
 
-        {apiError && <p className="mb-2 text-sm text-red-600">{apiError}</p>}
+        {apiError ? <p className="mb-2 text-sm text-red-600">{apiError}</p> : null}
 
-        <a
-          href="/auth/signup"
+        <Link
+          to="/auth/signup"
           className="mt-4 block text-center text-sm text-blue-600 hover:underline"
         >
           Don&apos;t have an account? Sign up
-        </a>
+        </Link>
       </form>
     </div>
   );
