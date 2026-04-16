@@ -4,8 +4,8 @@ Formula1Fantasy is a full-stack recreation of the core Formula 1 Fantasy experie
 
 ## Live Demo
 
-- Frontend: `https://<frontend-url>`
-- Backend health check: `https://<backend-url>/health`
+- Frontend: `https://formula1fantasy-ten.vercel.app`
+- Backend health check: `https://formula1fantasy.onrender.com/health`
 
 Because the frontend and backend are running on free hosting, the first request after inactivity can be slow. If the app looks unresponsive on first load, open the backend health check once, wait up to a minute for the services to wake up, and then try the main app again.
 
