@@ -111,7 +111,7 @@ const FantasyTeamsList = () => {
                     </div>
                     <Link
                       to={`/fantasyTeams/view/${team._id}`}
-                      className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-slate-800"
+                      className="rounded-full bg-red-500 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-red-600"
                     >
                       View Team
                     </Link>

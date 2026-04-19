@@ -130,7 +130,7 @@ const FantasyTeamView = () => {
         <Link
           to={`/fantasyTeams/edit/${teamId}`}
           state={{ team: fantasyTeam }}
-          className="inline-flex rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+          className="inline-flex rounded-xl bg-red-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-600"
         >
           Edit Team
         </Link>

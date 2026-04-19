@@ -1178,7 +1178,7 @@ const AdminPage = () => {
             <button
               type="submit"
               disabled={processingRound}
-              className="mt-4 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+              className="mt-4 rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
               {processingRound ? "Processing..." : "Process Round"}
             </button>

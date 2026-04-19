@@ -16,11 +16,11 @@ The deployed server is currently running on dummy data.
 These accounts are public and are intended for exploring the sample environment:
 
 - User account
-  - Email: `mainuser@gmail.com`
-  - Password: `userPassword`
+  - Email: `user@gmail.com`
+  - Password: `User1234!`
 - Admin account
-  - Email: `mainadmin@gmail.com`
-  - Password: `admin`
+  - Email: `admin@gmail.com`
+  - Password: `Admin1234!`
 
 The admin account can modify the dummy database through the admin panel, so the live data should be treated as disposable.
 
